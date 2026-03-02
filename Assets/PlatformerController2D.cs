@@ -1,7 +1,9 @@
 using System.Collections;
-using NUnit.Framework;
+using NaughtyAttributes;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using static UnityEngine.InputSystem.InputAction;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -19,6 +21,13 @@ public class PlatformerController2D : MonoBehaviour
     public float swimmingDeceleration = 5f;
     public float dashRecoveryTime = 0.2f;
     public float waterExitSpeed = 8f;
+    public float breathPoints = 100;
+    public float currentBreathPoints;
+    public float breathLossRate = 5;
+    public float breathRecoveryRate = 10;
+    public float dashTime = 0.01f;
+    public float wallJumpTimeout = 0.5f;
+    public float coyoteTime = 0.2f;
     public Transform groundCheck;
     public float groundCheckRadius;
     public Transform breathCheck;
@@ -30,36 +39,77 @@ public class PlatformerController2D : MonoBehaviour
     public LayerMask waterLayer;
     public LayerMask wallLayer;
     public SpriteRenderer spriteRenderer;
-    public bool enableAnimation = true;
     public Vector2 dashSpeed;
     public Vector2 wallJumpSpeed;
-    public float breathPoints = 100;
-    public float currentBreathPoints;
-    public float breathLossRate = 5;
-    public float breathRecoveryRate = 10;
-    public float dashTime = 0.01f;
+
+    public Image breathbar;
+    public Animator breathbarAnimator;
+    public CinemachineVirtualCameraBase cameraBase;
+    public bool enableAnimation = true;
+    public bool movementEnabled = true;
+    public bool disableMovementOnStart = false;
+    public GameObject jumpFXPrefab;
+    public GameObject landFXPrefab;
+    public GameObject wallLeftFXPrefab;
+    public GameObject wallRightFXPrefab;
+    public GameObject splashFXPrefab;
+
+    [ReadOnly]
+    public bool isJumping;
+
+    [ReadOnly]
+    public bool isGrounded;
+
+    [ReadOnly]
+    public bool isSubmerged;
+
+    [ReadOnly]
+    public bool isDashing;
+
+    [ReadOnly]
+    public bool isOnWall;
+
+    [ReadOnly]
+    public bool leftSideOnWall;
+
+    [ReadOnly]
+    public bool isWallJumping;
+
+    [ReadOnly]
+    public bool ignoreLeftWall;
+
+    [ReadOnly]
+    public bool ignoreRightWall;
+
+    [ReadOnly]
+    public bool canDash;
+
+    [ReadOnly]
+    public bool isRecoveringBreath;
+
+    [ReadOnly]
+    public bool isDying;
+    private float breathPercentage;
     private Animator anim;
     private Rigidbody2D rb;
     private float coyoteCounter;
     private float jumpBufferCounter;
     private float gravity;
     private float jumpVelocity;
-    public bool isGrounded;
-    public bool isSubmerged;
-    public bool isDashing;
-    public bool isOnWall;
-    public bool leftSideOnWall;
-    public bool isWallJumping;
-    public float wallJumpTimeout = 0.5f;
     private Vector2 inputBuffer;
     private Vector2 lastInputBuffer;
     private PlayerInput playerInput;
-    private bool canDash;
-    public bool ignoreLeftWall;
-    public bool ignoreRightWall;
+    private Vector2 startPosition;
+    public static PlatformerController2D global;
+
+    private void Awake()
+    {
+        global = this;
+    }
 
     private void Start()
     {
+        startPosition = transform.position;
         playerInput = GetComponent<PlayerInput>();
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
@@ -71,8 +121,12 @@ public class PlatformerController2D : MonoBehaviour
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
         SwitchInputMode("Platforming");
         currentBreathPoints = breathPoints;
-        // Debug.Log($"Calculated gravity: {gravity}");
-        // Debug.Log($"Calculated jump velocity: {jumpVelocity}");
+        breathPercentage = 1;
+
+        if (disableMovementOnStart)
+        {
+            DisableMovement();
+        }
     }
 
     public void SwitchInputMode(string modeName)
@@ -80,8 +134,20 @@ public class PlatformerController2D : MonoBehaviour
         playerInput.SwitchCurrentActionMap(modeName);
     }
 
+    public void EnableMovement()
+    {
+        movementEnabled = true;
+    }
+
+    public void DisableMovement()
+    {
+        movementEnabled = false;
+    }
+
     public void platformingInput(CallbackContext ctx)
     {
+        if (!movementEnabled) return;
+
         inputBuffer = ctx.ReadValue<Vector2>();
         if (inputBuffer.magnitude > 0)
             lastInputBuffer = inputBuffer;
@@ -89,13 +155,29 @@ public class PlatformerController2D : MonoBehaviour
 
     public void platformingJump(CallbackContext ctx)
     {
+        if (!movementEnabled) return;
+
         if (ctx.performed)
         {
+            if (isJumping)
+            {
+                return;
+            }
+            if (jumpFXPrefab)
+            {
+                GameObject jumpFX = Instantiate(
+                    jumpFXPrefab,
+                    groundCheck.position,
+                    Quaternion.identity
+                );
+            }
             if (anim && enableAnimation)
                 anim.SetTrigger("jump");
-            if (!isOnWall && isGrounded)
+            if ((!isOnWall && isGrounded) || coyoteCounter > 0)
             {
+                coyoteCounter = 0;
                 rb.linearVelocityY = jumpVelocity;
+                isJumping = true;
             }
             else if (isOnWall)
             {
@@ -105,7 +187,9 @@ public class PlatformerController2D : MonoBehaviour
                 rb.linearVelocity =
                     (wallJumpSpeed * (leftSideOnWall ? Vector2.right : Vector2.left))
                     + wallJumpSpeed.y * Vector2.up;
+                canDash = true;
                 StartCoroutine(wallJumpTimer());
+                isJumping = true;
             }
         }
     }
@@ -118,12 +202,15 @@ public class PlatformerController2D : MonoBehaviour
 
     public void platformingDash(CallbackContext ctx)
     {
+        if (!movementEnabled) return;
+
         if (ctx.performed && canDash)
         {
             if (anim && enableAnimation)
                 anim.SetTrigger("dash");
             rb.linearVelocity =
-                dashSpeed * new Vector2(Mathf.Sign(lastInputBuffer.x), Mathf.Sign(lastInputBuffer.y));
+                dashSpeed
+                * new Vector2(Mathf.Sign(lastInputBuffer.x), Mathf.Sign(lastInputBuffer.y));
             StartCoroutine(DashStart());
         }
     }
@@ -145,6 +232,8 @@ public class PlatformerController2D : MonoBehaviour
 
     public void swimmingInput(CallbackContext ctx)
     {
+        if (!movementEnabled) return;
+
         inputBuffer = ctx.ReadValue<Vector2>();
     }
 
@@ -174,19 +263,35 @@ public class PlatformerController2D : MonoBehaviour
             {
                 rb.linearVelocity = Vector2.zero;
                 rb.linearVelocityX = detectWallLeft ? -10 : 10;
+                isJumping = false;
+                if (detectWallLeft && wallLeftFXPrefab)
+                {
+                    GameObject wallLeftFX = Instantiate(
+                        wallLeftFXPrefab,
+                        wallCheckLeft.position,
+                        Quaternion.identity
+                    );
+                }
+                else if (detectWallRight && wallRightFXPrefab)
+                {
+                    GameObject wallRightFX = Instantiate(
+                        wallRightFXPrefab,
+                        wallCheckRight.position,
+                        Quaternion.identity
+                    );
+                }
             }
             if (detectWallLeft || detectWallRight)
                 leftSideOnWall = detectWallLeft;
 
             isOnWall = detectWall;
+
+            if (detectWall)
+                canDash = false;
         }
         else
         {
             isOnWall = false;
-        }
-        if (isOnWall)
-        {
-            canDash = false;
         }
         if (anim)
             anim.SetBool("isWall", isOnWall);
@@ -198,6 +303,17 @@ public class PlatformerController2D : MonoBehaviour
             ignoreLeftWall = false;
             ignoreRightWall = false;
             isDashing = false;
+            isJumping = false;
+
+            if (landFXPrefab)
+            {
+                GameObject landFX = Instantiate(
+                    landFXPrefab,
+                    groundCheck.position,
+                    Quaternion.identity
+                );
+            }
+
             StartCoroutine(dashRecovery());
         }
         isGrounded = detectGround;
@@ -208,22 +324,70 @@ public class PlatformerController2D : MonoBehaviour
         );
         if (detectWater)
         {
-            currentBreathPoints -= breathLossRate * Time.deltaTime;
+            if (currentBreathPoints > 0)
+                currentBreathPoints -= breathLossRate * Time.deltaTime;
+            else if (!isDying)
+            {
+                DieAndReset();
+                isDying = true;
+            }
         }
         else
         {
             currentBreathPoints += breathRecoveryRate * Time.deltaTime;
+            currentBreathPoints = Mathf.Clamp(currentBreathPoints, 0, breathPoints);
         }
+        bool recoveringBreathThisFrame = !detectWater && (currentBreathPoints < breathPoints);
+        if (!recoveringBreathThisFrame && isRecoveringBreath)
+        {
+            // breathbarAnimator.Play("close");
+            breathbarAnimator.SetBool("isOpen", false);
+        }
+        isRecoveringBreath = recoveringBreathThisFrame;
+
+        if (breathbar)
+        {
+            float targetBreathPercentage = currentBreathPoints / breathPoints;
+            breathPercentage = Mathf.Lerp(
+                breathPercentage,
+                targetBreathPercentage,
+                Time.deltaTime * 3
+            );
+            breathbar.fillAmount = Mathf.Round(breathPercentage * 120) / 120;
+        }
+
         if (detectWater && !isSubmerged)
         {
+            // breathbarAnimator.Play("open");
+            breathbarAnimator.SetBool("isOpen", true);
+
+            if (splashFXPrefab)
+            {
+                GameObject splashFX = Instantiate(
+                    splashFXPrefab,
+                    breathCheck.position,
+                    Quaternion.identity
+                );
+            }
+
             SwitchInputMode("Swimming");
         }
         else if (!detectWater && isSubmerged)
         {
+            if (splashFXPrefab)
+            {
+                GameObject splashFX = Instantiate(
+                    splashFXPrefab,
+                    breathCheck.position + Vector3.down * 0.4f,
+                    Quaternion.identity
+                );
+            }
             SwitchInputMode("Platforming");
-            currentBreathPoints = breathPoints;
+            // currentBreathPoints = breathPoints;
             rb.linearVelocityY = waterExitSpeed;
-            Debug.Log(rb.linearVelocity);
+            ignoreLeftWall = false;
+            ignoreRightWall = false;
+            canDash = true;
         }
         if (anim && enableAnimation)
         {
@@ -266,8 +430,14 @@ public class PlatformerController2D : MonoBehaviour
             rb.linearVelocityX = Mathf.Clamp(rb.linearVelocityX, -maxSpeed, maxSpeed);
             rb.linearVelocityY += speedDiffY * accelRate * Time.deltaTime;
         }
+        if (isGrounded)
+            coyoteCounter = coyoteTime;
         if (!isGrounded && !isSubmerged && !isDashing && !isOnWall)
+        {
+            coyoteCounter -= Time.deltaTime;
+            coyoteCounter = Mathf.Clamp(coyoteCounter, 0, coyoteTime);
             rb.linearVelocityY -= gravity * Time.deltaTime;
+        }
 
         isSubmerged = detectWater;
     }
@@ -276,6 +446,41 @@ public class PlatformerController2D : MonoBehaviour
     {
         if (isDashing)
             StopDash();
+    }
+
+    [Button]
+    public void DieAndReset()
+    {
+        StartCoroutine(DieResetCoroutine());
+    }
+
+    public IEnumerator DieResetCoroutine()
+    {
+        Vector2 playerPosition = Camera.main.WorldToScreenPoint(transform.position);
+        yield return CanvasWiper.global.StartCoroutine(
+            CanvasWiper.global.wipeScreen(playerPosition, true)
+        );
+        cameraBase.Follow = transform;
+        transform.position = startPosition;
+        gravity = (2 * jumpHeight) / Mathf.Pow(timeToApex, 2);
+        jumpVelocity = gravity * timeToApex;
+
+        isJumping = false;
+        isDashing = false;
+        isOnWall = false;
+        isRecoveringBreath = false;
+        isSubmerged = false;
+        isDying = false;
+        SwitchInputMode("Platforming");
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        CameraConstraintManager.global.DisableAllAndSetFirst();
+        currentBreathPoints = breathPoints;
+        breathPercentage = 1;
+        playerPosition = Camera.main.WorldToScreenPoint(transform.position);
+        yield return new WaitForSeconds(1);
+        yield return CanvasWiper.global.StartCoroutine(
+            CanvasWiper.global.wipeScreen(playerPosition, false)
+        );
     }
 
     private void OnDrawGizmos()

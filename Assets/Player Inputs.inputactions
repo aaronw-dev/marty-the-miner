@@ -32,6 +32,15 @@
                     "processors": "",
                     "interactions": "Press",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Skip Dialogue",
+                    "type": "Button",
+                    "id": "29dba2a1-0a82-47c5-911d-26b47ec72b47",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -148,21 +157,10 @@
                 {
                     "name": "",
                     "id": "5d7a0e76-7c2b-4ee5-b97e-81eea8c339d1",
-                    "path": "<Gamepad>/buttonSouth",
+                    "path": "<Gamepad>/<Button>",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
-                    "action": "Jump",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "70258056-b326-4fc7-ac10-5448edabd33a",
-                    "path": "<Keyboard>/space",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Keyboard&Mouse",
                     "action": "Jump",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -192,7 +190,7 @@
                 {
                     "name": "",
                     "id": "1b470437-2dc5-4a4c-9511-eff4da739b1b",
-                    "path": "<Gamepad>/rightShoulder",
+                    "path": "<Linux::SonyCorp::SonyComputerEntertainmentWirelesscontroller>/Start",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
@@ -208,6 +206,28 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Dash",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "30a03de9-d147-4a08-a47e-d1163d687bd2",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Skip Dialogue",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4969e70f-f756-49a0-9a90-189e95b3cb6f",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Skip Dialogue",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -230,6 +250,15 @@
                     "name": "Thrust",
                     "type": "Button",
                     "id": "1c4df0af-83ba-4b63-8e02-32e672817e06",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Skip Dialogue",
+                    "type": "Button",
+                    "id": "c5e05c3f-0a8c-4129-a575-9a0f274d0135",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -377,6 +406,28 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Thrust",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fecb36a3-138e-43e4-8eb8-152f039ed7fa",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Skip Dialogue",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a0845c93-efd0-4335-ae8b-ca5e3ab96cc0",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Skip Dialogue",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
