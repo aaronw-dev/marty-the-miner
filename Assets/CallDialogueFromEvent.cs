@@ -9,6 +9,10 @@ public class CallDialogueFromEvent : MonoBehaviour
     [Header("Settings")]
     [SerializeField]
     private bool startOnAwake = false;
+    [SerializeField]
+    private bool runOnlyOnce = false;
+
+    private bool hasBeenRun = false;
 
     void Start()
     {
@@ -20,9 +24,16 @@ public class CallDialogueFromEvent : MonoBehaviour
 
     public void StartDialogue()
     {
+        // Check if we should only run once and have already run
+        if (runOnlyOnce && hasBeenRun)
+        {
+            return;
+        }
+
         if (DialogueManager.Instance != null && dialogueEntries.Length > 0)
         {
             DialogueManager.Instance.StartDialogueWithArray(dialogueEntries);
+            hasBeenRun = true;
         }
         else if (DialogueManager.Instance == null)
         {
@@ -36,6 +47,12 @@ public class CallDialogueFromEvent : MonoBehaviour
 
     public void StartDialogueIfNotActive()
     {
+        // Check if we should only run once and have already run
+        if (runOnlyOnce && hasBeenRun)
+        {
+            return;
+        }
+
         if (DialogueManager.Instance != null && !DialogueManager.Instance.IsDialogueActive())
         {
             StartDialogue();

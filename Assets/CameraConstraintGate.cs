@@ -5,29 +5,21 @@ public class CameraConstraintGate : MonoBehaviour
 {
     public LayerMask playerMask;
 
-    [SerializeField]
-    private Vector2 boundingBoxSize;
+    public Vector2 boundingBoxSize;
 
-    [SerializeField]
-    private Collider2D leftCollider;
+    public Collider2D leftCollider;
 
-    [SerializeField]
-    private Collider2D rightCollider;
+    public Collider2D rightCollider;
 
-    [SerializeField]
-    private UnityEvent onPlayerEnterLeft;
+    public UnityEvent onPlayerEnterLeft;
 
-    [SerializeField]
-    private UnityEvent onPlayerEnterRight;
+    public UnityEvent onPlayerEnterRight;
 
-    [SerializeField]
-    private UnityEvent onPlayerExitLeft;
+    public UnityEvent onPlayerExitLeft;
 
-    [SerializeField]
-    private UnityEvent onPlayerExitRight;
+    public UnityEvent onPlayerExitRight;
 
-    [SerializeField]
-    private UnityEvent onColliderEventChange;
+    public UnityEvent onColliderEventChange;
 
     private bool lastStateLeft;
     private bool lastStateRight;

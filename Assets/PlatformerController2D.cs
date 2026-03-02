@@ -3,6 +3,7 @@ using NaughtyAttributes;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static UnityEngine.InputSystem.InputAction;
 
@@ -100,6 +101,7 @@ public class PlatformerController2D : MonoBehaviour
     private Vector2 lastInputBuffer;
     private PlayerInput playerInput;
     private Vector2 startPosition;
+    private CameraConstraintGate lastGate;
     public static PlatformerController2D global;
 
     private void Awake()
@@ -142,6 +144,16 @@ public class PlatformerController2D : MonoBehaviour
     public void DisableMovement()
     {
         movementEnabled = false;
+    }
+
+    public void SetCheckpoint(Transform checkpointTransform)
+    {
+        startPosition = checkpointTransform.position;
+    }
+
+    public void SetLastGate(CameraConstraintGate gate)
+    {
+        lastGate = gate;
     }
 
     public void platformingInput(CallbackContext ctx)
@@ -454,6 +466,26 @@ public class PlatformerController2D : MonoBehaviour
         StartCoroutine(DieResetCoroutine());
     }
 
+    public void LoadScene(string sceneName)
+    {
+        StartCoroutine(LoadSceneCoroutine(sceneName));
+    }
+
+    public void LoadScene(int sceneIndex)
+    {
+        StartCoroutine(LoadSceneCoroutine(sceneIndex.ToString()));
+    }
+
+    public IEnumerator LoadSceneCoroutine(string sceneName)
+    {
+        Vector2 playerPosition = Camera.main.WorldToScreenPoint(transform.position);
+        yield return CanvasWiper.global.StartCoroutine(
+            CanvasWiper.global.wipeScreen(playerPosition, true)
+        );
+
+        SceneManager.LoadScene(sceneName);
+    }
+
     public IEnumerator DieResetCoroutine()
     {
         Vector2 playerPosition = Camera.main.WorldToScreenPoint(transform.position);
@@ -473,7 +505,16 @@ public class PlatformerController2D : MonoBehaviour
         isDying = false;
         SwitchInputMode("Platforming");
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-        CameraConstraintManager.global.DisableAllAndSetFirst();
+
+        if (lastGate != null)
+        {
+            CameraConstraintManager.global.SetActiveGate(lastGate);
+        }
+        else
+        {
+            CameraConstraintManager.global.DisableAllAndSetFirst();
+        }
+
         currentBreathPoints = breathPoints;
         breathPercentage = 1;
         playerPosition = Camera.main.WorldToScreenPoint(transform.position);

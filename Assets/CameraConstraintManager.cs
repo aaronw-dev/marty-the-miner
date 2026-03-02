@@ -57,4 +57,38 @@ public class CameraConstraintManager : MonoBehaviour
         confiner.BoundingShape2D = activeCollider;
         confiner.BakeBoundingShape(cam, 10);
     }
+
+    public void SetActiveGate(CameraConstraintGate gate)
+    {
+        // Disable all colliders first
+        foreach (Transform t in transform)
+        {
+            PolygonCollider2D collider = t.GetComponent<PolygonCollider2D>();
+            if (collider != null)
+            {
+                collider.gameObject.SetActive(false);
+            }
+        }
+
+        // Find and activate the collider associated with this gate
+        // We'll use the right collider from the gate to find the matching constraint
+        if (gate.rightCollider != null)
+        {
+            foreach (Transform t in transform)
+            {
+                PolygonCollider2D polygonCollider = t.GetComponent<PolygonCollider2D>();
+                if (polygonCollider == gate.rightCollider)
+                {
+                    t.gameObject.SetActive(true);
+                    activeCollider = polygonCollider;
+                    confiner.BoundingShape2D = activeCollider;
+                    confiner.BakeBoundingShape(cam, 10);
+                    return;
+                }
+            }
+        }
+
+        // Fallback: if no matching collider found, use first available
+        DisableAllAndSetFirst();
+    }
 }

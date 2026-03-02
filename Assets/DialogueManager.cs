@@ -76,7 +76,10 @@ public class DialogueManager : MonoBehaviour
         dialogueFinished = false;
 
         if (dialoguePanel != null)
+        {
             dialoguePanel.SetActive(true);
+            finishAnimator.Play("dialogue-open");
+        }
 
         ShowCurrentDialogue();
     }
@@ -160,6 +163,12 @@ public class DialogueManager : MonoBehaviour
 
     void NextDialogue()
     {
+        // Fire the event for the current dialogue entry before moving to the next
+        if (currentDialogueIndex < dialogueEntries.Count)
+        {
+            dialogueEntries[currentDialogueIndex].onDialogueFinished?.Invoke();
+        }
+
         currentDialogueIndex++;
         ShowCurrentDialogue();
     }
@@ -167,13 +176,6 @@ public class DialogueManager : MonoBehaviour
     void FinishDialogue()
     {
         dialogueFinished = true;
-
-        // Invoke the finish event for the completed dialogue sequence
-        if (dialogueEntries.Count > 0 && currentDialogueIndex < dialogueEntries.Count)
-        {
-            dialogueEntries[currentDialogueIndex].onDialogueFinished?.Invoke();
-        }
-
         finishAnimator.Play("dialogue-close");
     }
 
