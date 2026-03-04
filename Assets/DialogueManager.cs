@@ -20,6 +20,7 @@ public class DialogueManager : MonoBehaviour
     public static DialogueManager Instance { get; private set; }
 
     [Header("Dialogue Settings")]
+    public bool playOnAwake = true;
     public List<DialogueEntry> dialogueEntries = new List<DialogueEntry>();
     public float textSpeed = 0.05f;
 
@@ -43,7 +44,8 @@ public class DialogueManager : MonoBehaviour
 
     void Start()
     {
-        if (dialogueEntries.Count > 0)
+        dialogueFinished = !playOnAwake;
+        if (playOnAwake && dialogueEntries.Count > 0)
         {
             StartDialogue();
         }
@@ -70,7 +72,10 @@ public class DialogueManager : MonoBehaviour
     public void StartDialogue()
     {
         if (dialogueEntries.Count == 0)
+        {
+            Debug.LogWarning("DialogueManager: Attempted to start dialogue with 0 entries in dialogueEntries array.");
             return;
+        }
 
         currentDialogueIndex = 0;
         dialogueFinished = false;
@@ -198,6 +203,11 @@ public class DialogueManager : MonoBehaviour
     public void StartDialogueWithArray(DialogueEntry[] newDialogue)
     {
         dialogueEntries = new List<DialogueEntry>(newDialogue);
+        if (newDialogue.Length == 0)
+        {
+            Debug.LogWarning("DialogueManager: Attempted to start dialogue with 0 entries in provided array.");
+            return;
+        }
         StartDialogue();
     }
 }

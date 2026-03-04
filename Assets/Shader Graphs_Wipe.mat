@@ -50,11 +50,11 @@ Material:
     - _StencilWriteMask: 255
     - _UIMaskSoftnessX: 1
     - _UIMaskSoftnessY: 1
-    - _size: 0
+    - _size: 569.88135
     - size: 0.5
     m_Colors:
     - _Circle_Offset: {r: 360, g: 540, b: 0, a: 0}
     - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
-    - _offset: {r: 1850.1375, g: 634.56, b: 0, a: 0}
+    - _offset: {r: 633.8142, g: 1080, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

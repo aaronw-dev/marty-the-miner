@@ -488,6 +488,9 @@ public class PlatformerController2D : MonoBehaviour
 
     public IEnumerator DieResetCoroutine()
     {
+        isDying = true;
+        inputBuffer = Vector2.zero;
+        DisableMovement();
         Vector2 playerPosition = Camera.main.WorldToScreenPoint(transform.position);
         yield return CanvasWiper.global.StartCoroutine(
             CanvasWiper.global.wipeScreen(playerPosition, true)
@@ -502,8 +505,12 @@ public class PlatformerController2D : MonoBehaviour
         isOnWall = false;
         isRecoveringBreath = false;
         isSubmerged = false;
-        isDying = false;
+        canDash = true;
         SwitchInputMode("Platforming");
+
+        if (anim)
+            anim.SetTrigger("land");
+
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
         if (lastGate != null)
@@ -518,7 +525,11 @@ public class PlatformerController2D : MonoBehaviour
         currentBreathPoints = breathPoints;
         breathPercentage = 1;
         playerPosition = Camera.main.WorldToScreenPoint(transform.position);
+        breathbarAnimator.SetBool("isOpen", false);
+
         yield return new WaitForSeconds(1);
+        EnableMovement();
+        isDying = false;
         yield return CanvasWiper.global.StartCoroutine(
             CanvasWiper.global.wipeScreen(playerPosition, false)
         );
