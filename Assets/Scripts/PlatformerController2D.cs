@@ -29,7 +29,6 @@ public class PlatformerController2D : MonoBehaviour
     public float dashTime = 0.01f;
     public float wallJumpTimeout = 0.5f;
     public float wallJumpInputLockTime = 0.3f;
-    public float wallGrabTime = 2f;
     public float coyoteTime = 0.2f;
     public Transform groundCheck;
     public float groundCheckRadius;
@@ -99,7 +98,6 @@ public class PlatformerController2D : MonoBehaviour
     private float jumpBufferCounter;
     private float wallJumpInputLockCounter;
     private int wallJumpLockedDirection;
-    private float wallGrabCounter;
     private float gravity;
     private float jumpVelocity;
     private Vector2 inputBuffer;
@@ -266,7 +264,8 @@ public class PlatformerController2D : MonoBehaviour
     public IEnumerator dashRecovery()
     {
         yield return new WaitForSeconds(dashRecoveryTime);
-        canDash = true;
+        //canDash = true;
+        yield return null;
     }
 
     private void Update()
@@ -288,7 +287,6 @@ public class PlatformerController2D : MonoBehaviour
             if (!isOnWall && detectWall)
             {
                 rb.linearVelocity = Vector2.zero;
-                wallGrabCounter = wallGrabTime;
                 isJumping = false;
 
                 spriteRenderer.flipX = detectWallLeft;
@@ -319,12 +317,13 @@ public class PlatformerController2D : MonoBehaviour
             {
                 rb.linearVelocityY = 0f;
                 canDash = false;
-                wallGrabCounter -= Time.deltaTime;
-                if (wallGrabCounter <= 0)
+                if (leftSideOnWall)
                 {
-                    isOnWall = false;
-                    if (leftSideOnWall) ignoreLeftWall = true;
-                    else ignoreRightWall = true;
+                    lastInputBuffer = Vector2.right;
+                }
+                else
+                {
+                    lastInputBuffer = Vector2.left;
                 }
             }
         }
@@ -437,7 +436,7 @@ public class PlatformerController2D : MonoBehaviour
             spriteRenderer.flipX = inputBuffer.x < 0;
         if (wallJumpInputLockCounter > 0)
             wallJumpInputLockCounter -= Time.deltaTime;
-        float effectiveInputX = (wallJumpInputLockCounter > 0 && Mathf.Sign(inputBuffer.x) == wallJumpLockedDirection)
+        float effectiveInputX = (wallJumpInputLockCounter > 0 && -Mathf.Sign(inputBuffer.x) == wallJumpLockedDirection)
             ? 0f
             : inputBuffer.x;
         float maxSpeed = isSubmerged ? maxSwimSpeed : maxPlatformSpeed;
