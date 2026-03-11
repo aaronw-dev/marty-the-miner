@@ -157,7 +157,7 @@
                 {
                     "name": "",
                     "id": "5d7a0e76-7c2b-4ee5-b97e-81eea8c339d1",
-                    "path": "<Gamepad>/<Button>",
+                    "path": "<Gamepad>/buttonSouth",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
@@ -190,7 +190,7 @@
                 {
                     "name": "",
                     "id": "1b470437-2dc5-4a4c-9511-eff4da739b1b",
-                    "path": "<Linux::SonyCorp::SonyComputerEntertainmentWirelesscontroller>/Start",
+                    "path": "<Gamepad>/rightShoulder",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
@@ -212,10 +212,10 @@
                 {
                     "name": "",
                     "id": "30a03de9-d147-4a08-a47e-d1163d687bd2",
-                    "path": "",
+                    "path": "<Gamepad>/buttonEast",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Gamepad",
                     "action": "Skip Dialogue",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -378,17 +378,6 @@
                 },
                 {
                     "name": "",
-                    "id": "73b56f39-7963-41b3-9e50-44052f7522b4",
-                    "path": "<Joystick>/stick",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Joystick",
-                    "action": "Move",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "e0b8a2e3-20c3-4e44-8c55-2459b462bbfb",
                     "path": "<Gamepad>/rightTrigger",
                     "interactions": "",
@@ -412,10 +401,10 @@
                 {
                     "name": "",
                     "id": "fecb36a3-138e-43e4-8eb8-152f039ed7fa",
-                    "path": "",
+                    "path": "<Gamepad>/buttonEast",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Gamepad",
                     "action": "Skip Dialogue",
                     "isComposite": false,
                     "isPartOfComposite": false
