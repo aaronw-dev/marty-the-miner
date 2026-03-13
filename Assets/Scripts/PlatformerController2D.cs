@@ -203,6 +203,12 @@ public class PlatformerController2D : MonoBehaviour
                 ignoreLeftWall = leftSideOnWall;
                 ignoreRightWall = !leftSideOnWall;
                 coyoteCounter = 0;
+
+                if (leftSideOnWall)
+                    lastInputBuffer = Vector2.right;
+                else
+                    lastInputBuffer = Vector2.left;
+
                 rb.linearVelocity = new Vector2(
                     leftSideOnWall ? wallJumpSpeed.x : -wallJumpSpeed.x,
                     wallJumpSpeed.y
@@ -342,6 +348,7 @@ public class PlatformerController2D : MonoBehaviour
             ignoreRightWall = false;
             isDashing = false;
             isJumping = false;
+            canDash = true;
 
             if (landFXPrefab)
             {
@@ -436,7 +443,7 @@ public class PlatformerController2D : MonoBehaviour
             spriteRenderer.flipX = inputBuffer.x < 0;
         if (wallJumpInputLockCounter > 0)
             wallJumpInputLockCounter -= Time.deltaTime;
-        float effectiveInputX = (wallJumpInputLockCounter > 0 && -Mathf.Sign(inputBuffer.x) == wallJumpLockedDirection)
+        float effectiveInputX = (wallJumpInputLockCounter > 0 && Mathf.Sign(inputBuffer.x) == wallJumpLockedDirection)
             ? 0f
             : inputBuffer.x;
         float maxSpeed = isSubmerged ? maxSwimSpeed : maxPlatformSpeed;
